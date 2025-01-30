@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Chat</title>
+    <style>
+        :root {
+            --primary-color: #6B46C1;
+            --bg-color: #F9FAFB;
+            --text-color: #374151;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .channels {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .channel-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .channel-btn.active {
+            background: #EDE9FE;
+            color: var(--primary-color);
+        }
+
+        .avatar {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+
+        .identity {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: var(--bg-color);
+        }
+
+        .message.vulnerable {
+            background: #EDE9FE;
+            border: 1px solid #DDD6FE;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-mood {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6B7280;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .poll {
+            background: #F3F4F6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .poll-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .input-area {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .input-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .control-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            background: #F3F4F6;
+        }
+
+        .control-btn.active {
+            background: #EDE9FE;
+            color: var(--primary-color);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.5rem;
+            resize: none;
+            min-height: 5rem;
+        }
+
+        .send-btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+
+        .resolution-select {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid #D1D5DB;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="channels">
+                <button class="channel-btn active" data-channel="general">💬 General</button>
+                <button class="channel-btn" data-channel="leadership">👥 Leadership Feedback</button>
+                <button class="channel-btn" data-channel="culture">❤️ Workplace Culture</button>
+                <button class="channel-btn" data-channel="suggestions">💡 Suggestions</button>
+            </div>
+            <div class="identity">
+                <div class="avatar" id="userAvatar"></div>
+                <span id="username"></span>
+                <button onclick="generateIdentity()" class="action-btn">🔄</button>
+            </div>
+        </div>
+
+        <div class="messages" id="messageArea"></div>
+
+        <div class="input-area">
+            <div class="input-controls">
+                <button class="control-btn" id="vulnerabilityBtn">🫂 Vulnerability Boost</button>
+                <button class="control-btn" onclick="createPoll()">📊 Create Poll</button>
+                <select id="moodSelect">
+                    <option value="">Select Mood</option>
+                    <option value="😊">😊 Hopeful</option>
+                    <option value="😔">😔 Concerned</option>
+                    <option value="😤">😤 Frustrated</option>
+                    <option value="🙏">🙏 Grateful</option>
+                    <option value="💡">💡 Insightful</option>
+                    <option value="💪">💪 Motivated</option>
+                </select>
+            </div>
+            <div class="input-wrapper">
+                <textarea id="messageInput" placeholder="Type your message..."></textarea>
+                <button class="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fictional names for random generation
+        const firstNames = [
+            "Gandalf", "Sherlock", "Arya", "Neo", "Trinity", "Morpheus",
+            "Katniss", "Dumbledore", "Yoda", "Skywalker", "Potter", "Strange"
+        ];
+
+        const lastNames = [
+            "Wayne", "Holmes", "Stark", "Anderson", "Baggins", "Granger",
+            "Parker", "Xavier", "Gray", "Rogers", "Strange", "Kent"
+        ];
+
+        // Gradient combinations for avatars
+        const gradientCombos = [
+            ['#FF6B6B', '#4ECDC4'],
+            ['#A8E6CF', '#FFD3B6'],
+            ['#FF9A9E', '#FAD0C4'],
+            ['#84FAB0', '#8FD3F4'],
+            ['#FDA7DF', '#D980FA'],
+            ['#B721FF', '#21D4FD']
+        ];
+
+        let currentUser = {
+            name: '',
+            gradient: ''
+        };
+
+        let messages = [];
+        let currentChannel = 'general';
+
+        function generateIdentity() {
+            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const combo = gradientCombos[Math.floor(Math.random() * gradientCombos.length)];
+            
+            currentUser = {
+                name: `${firstName} ${lastName}`,
+                gradient: `linear-gradient(45deg, ${combo[0]}, ${combo[1]})`
+            };
+
+            document.getElementById('username').textContent = currentUser.name;
+            document.getElementById('userAvatar').style.background = currentUser.gradient;
+            document.getElementById('userAvatar').textContent = getInitials(currentUser.name);
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(word => word[0]).join('').toUpperCase();
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const moodSelect = document.getElementById('moodSelect');
+            const vulnerabilityBtn = document.getElementById('vulnerabilityBtn');
+            
+            if (messageInput.value.trim()) {
+                const newMessage = {
+                    id: Date.now(),
+                    text: messageInput.value,
+                    sender: currentUser.name,
+                    senderGradient: currentUser.gradient,
+                    timestamp: new Date().toISOString(),
+                    channel: currentChannel,
+                    mood: moodSelect.value,
+                    isVulnerable: vulnerabilityBtn.classList.contains('active'),
+                    truthMeter: 0,
+                    resolutionStatus: 'open'
+                };
+
+                messages.push(newMessage);
+                renderMessages();
+                messageInput.value = '';
+                moodSelect.value = '';
+                vulnerabilityBtn.classList.remove('active');
+                generateIdentity();
+            }
+        }
+
+        function renderMessages() {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = '';
+
+            messages
+                .filter(msg => msg.channel === currentChannel)
+                .forEach(message => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${message.isVulnerable ? 'vulnerable' : ''}`;
+                    
+                    messageDiv.innerHTML = `
+                        <div class="message-header">
+                            <div class="avatar" style="background: ${message.senderGradient}">${getInitials(message.sender)}</div>
+                            <span>${message.sender}</span>
+                            ${message.mood ? `<span class="message-mood">${message.mood}</span>` : ''}
+                        </div>
+                        <div class="message-content">${message.text}</div>
+                        <div class="message-actions">
+                            <button class="action-btn" onclick="updateTruthMeter(${message.id})">
+                                👥 ${message.truthMeter} relate to this
+                            </button>
+                            <button class="action-btn" onclick="initiatePrivateResponse(${message.id})">
+                                💬 Private Response
+                            </button>
+                            <select class="resolution-select" onchange="updateResolution(${message.id}, this.value)">
+                                <option value="open" ${message.resolutionStatus === 'open' ? 'selected' : ''}>⭕ Open</option>
+                                <option value="inProgress" ${message.resolutionStatus === 'inProgress' ? 'selected' : ''}>🔄 In Progress</option>
+                                <option value="addressed" ${message.resolutionStatus === 'addressed' ? 'selected' : ''}>✅ Addressed</option>
+                                <option value="pending" ${message.resolutionStatus === 'pending' ? 'selected' : ''}>⚠️ Needs Attention</option>
+                            </select>
+                        </div>
+                    `;
+                    
+                    messageArea.appendChild(messageDiv);
+                });
+
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+        function updateTruthMeter(messageId) {
+            const message = messages.find(m => m.id === messageId);
+            if (message) {
+                message.truthMeter++;
+                renderMessages();
+            }
+        }
+
+        function updateResolution(messageId, status) {
+            const message = messages.find(m => m.id === messageId);
+            if (message) {
+                message.resolutionStatus = status;
+                renderMessages();
+            }
+        }
+
+        function initiatePrivateResponse(messageId) {
+            alert('Private response channel requested. In a full implementation, this would create a secure temporary channel.');
+        }
+
+        function createPoll() {
+            const question = prompt('Enter your poll question:');
+            if (question) {
+                const messageInput = document.getElementById('messageInput');
+                messageInput.value = `📊 Poll: ${question}\n\n[ ] Yes\n[ ] No\n[ ] Maybe`;
+            }
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.channel-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                currentChannel = e.target.dataset.channel;
+                renderMessages();
+            });
+        });
+
+        document.getElementById('vulnerabilityBtn').addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Initialize
+        generateIdentity();
+    </script>
+</body>
+</html>
